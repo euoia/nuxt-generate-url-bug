@@ -1,0 +1,11 @@
+@font-face {
+  font-family: "Open Sans";
+  font-style: normal;
+  font-display: swap;
+  font-weight: bold;
+  src: url("./Open_Sans-700-latin20.woff2") format("woff2");
+}
+
+.open-sans {
+  font-family: "Open Sans";
+}
