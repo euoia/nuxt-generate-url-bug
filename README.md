@@ -1,69 +1,64 @@
 # nuxt-generate-url-bug
 
-## Build Setup
+This repository demonstrates a bug with `nuxt generate` where relative URLs in
+CSS files are converted to absolute URLs even when `build.publicPath` is
+relative in `nuxt.config`.
 
-```bash
-# install dependencies
-$ npm install
+The use case here is when you are trying to produce a completely static site
+than can be deployed to any subdirectory. That is, you don't know ahead of time
+whether it will be deployed to https://example.com/ or
+https://https://example.com/myamazingwebsite etc.
 
-# serve with hot reload at localhost:3000
-$ npm run dev
+In these cases, all assets must be referenced relatively.
 
-# build for production and launch server
-$ npm run build
-$ npm run start
+## Changes from create-nuxt-app
 
-# generate static project
-$ npm run generate
+Check the commit log for the complete list of changes, but in general, after running `create-nuxt-app`:
+
+1. In nuxt.config.js `build.publicPath` was set to `./_nuxt`:
+
+```
+  // Build Configuration: https://go.nuxtjs.dev/config-build
+  build: {
+    publicPath: "./_nuxt"
+  }
 ```
 
-For detailed explanation on how things work, check out the [documentation](https://nuxtjs.org).
+2. In nuxt.config a css file was added: `css: ["~/assets/main.css"],`
 
-## Special Directories
+3. An assets directory was created and an `assets/main.css` file was created.
 
-You can create the following extra directories, some of which have special behaviors. Only `pages` is required; you can delete them if you don't want to use their functionality.
+4. `assets/main.css` references a font using a relative URL reference.
 
-### `assets`
+## How to Test
 
-The assets directory contains your uncompiled assets such as Stylus or Sass files, images, or fonts.
+Test whether asset loading is working inside a subdirectory by serving the root
+of this repository and attempting to load the `/dist` directory.
 
-More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/directory-structure/assets).
+1. Clone this repo
+2. Run `npm install`
+3. Run `nuxt generate`
 
-### `components`
+The `dist/` directory will contain the static site.
 
-The components directory contains your Vue.js components. Components make up the different parts of your page and can be reused and imported into your pages, layouts and even other components.
+Serve the root directory of this project. The static static site will be
+served from `/dist`. For example:
 
-More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/directory-structure/components).
+```
+python3 -m http.server
+```
 
-### `layouts`
+You should see something like the following:
 
-Layouts are a great help when you want to change the look and feel of your Nuxt app, whether you want to include a sidebar or have distinct layouts for mobile and desktop.
+```
+Serving HTTP on :: port 8000 (http://[::]:8000/) ...
+```
 
-More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/directory-structure/layouts).
+6. Go to http://localhost:8000/dist in your browser.
+7. Observe that the fonts, which are included from main.css fail to load.
 
+You should see an error in the browser console:
 
-### `pages`
-
-This directory contains your application views and routes. Nuxt will read all the `*.vue` files inside this directory and setup Vue Router automatically.
-
-More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/get-started/routing).
-
-### `plugins`
-
-The plugins directory contains JavaScript plugins that you want to run before instantiating the root Vue.js Application. This is the place to add Vue plugins and to inject functions or constants. Every time you need to use `Vue.use()`, you should create a file in `plugins/` and add its path to plugins in `nuxt.config.js`.
-
-More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/directory-structure/plugins).
-
-### `static`
-
-This directory contains your static files. Each file inside this directory is mapped to `/`.
-
-Example: `/static/robots.txt` is mapped as `/robots.txt`.
-
-More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/directory-structure/static).
-
-### `store`
-
-This directory contains your Vuex store files. Creating a file in this directory automatically activates Vuex.
-
-More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/directory-structure/store).
+```
+GET http://localhost:8000/_nuxt/fonts/Open_Sans-700-latin20.55397be.woff2 net::ERR_ABORTED 404 (File not found)
+```
